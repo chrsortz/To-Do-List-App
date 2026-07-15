@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 //Connection string(Database)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(
+    options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection") ?? 
         throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
 
