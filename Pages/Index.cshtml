@@ -1,0 +1,199 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="text-center app-title-wrap py-5">
+    <h1 class="app-title">
+        <span class="app-title-emoji">✦</span>
+        To - Do List
+        <span class="app-title-emoji">✦</span>
+    </h1>
+    <p class="app-subtitle">list your tasks for the day, get it done.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Add a new task</h5>
+                <form method="post" asp-page-handler="Add">
+                    <div class="row g-2">
+                        <div class="col-md-5">
+                            <input asp-for="NewTodo.Title" class="form-control" placeholder="Enter title of the task..." />
+                            <span asp-validation-for="NewTodo.Title" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <select asp-for="NewTodo.Priority" class="form-select">
+                                <option value="Low">Low priority</option>
+                                <option value="Normal" selected>Normal priority</option>
+                                <option value="High">High priority</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input asp-for="NewTodo.DueDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary">Add</button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <input asp-for="NewTodo.Notes" class="form-control form-control-sm" placeholder="Add some description for your task..." />
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="btn-group" role="group">
+                <a class="btn btn-sm @(Model.Filter == "all" ? "btn-dark" : "btn-outline-dark")" href="/?Filter=all">
+                    All (@Model.TotalCount)
+                </a>
+                <a class="btn btn-sm @(Model.Filter == "active" ? "btn-dark" : "btn-outline-dark")" href="/?Filter=active">
+                    Active (@Model.ActiveCount)
+                </a>
+                <a class="btn btn-sm @(Model.Filter == "completed" ? "btn-dark" : "btn-outline-dark")" href="/?Filter=completed">
+                    Completed (@Model.CompletedCount)
+                </a>
+            </div>
+        </div>
+
+        @if (!Model.Todos.Any())
+        {
+        <div class="text-center text-muted py-5">
+            <p class="fs-5">Nothing here yet 🎉</p>
+            <p>Add a task above to get started.</p>
+        </div>
+        }
+        else
+        {
+        <ul class="list-group">
+            @foreach (var todo in Model.Todos)
+                {
+            <li class="list-group-item todo-item priority-@todo.Priority @(todo.IsCompleted ? "completed" : "")">
+                <div class="d-flex align-items-center">
+                    <form method="post" asp-page-handler="Toggle" asp-route-id="@todo.Id" class="me-2 d-flex">
+                        <button type="submit" class="todo-check @(todo.IsCompleted ? "checked" : "")" title="Toggle complete"></button>
+                    </form>
+
+                    <!-- DISPLAY VIEW -->
+                    <div class="flex-grow-1 todo-display" id="display-@todo.Id">
+                        <div class="todo-title fw-semibold">@todo.Title</div>
+                        @if (!string.IsNullOrWhiteSpace(todo.Notes))
+            {
+                        <div class="text-muted small">@todo.Notes</div>
+            }
+                        <div class="small mt-1">
+                            <span class="badge bg-secondary">@todo.Priority</span>
+                            @if (todo.DueDate.HasValue)
+                {
+                            <span class="@(todo.IsOverdue ? "overdue" : "text-muted")">
+                                Due @todo.DueDate.Value.ToString("MMM d, yyyy")
+                                @(todo.IsOverdue ? " (overdue)" : "")
+                            </span>
+                }
+                        </div>
+                    </div>
+
+                    <!-- EDIT VIEW (hidden by default) -->
+                    <form method="post" asp-page-handler="Edit" id="edit-form-@todo.Id" class="flex-grow-1 todo-edit-form d-none">
+                        <input type="hidden" name="id" value="@todo.Id" />
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-6">
+                                <input name="title" class="form-control form-control-sm" value="@todo.Title" placeholder="Task title" />
+                            </div>
+                            <div class="col-md-3">
+                                <select name="priority" class="form-select form-select-sm">
+                                    <option value="Low" selected="@(todo.Priority == Priority.Low)">Low priority</option>
+                                    <option value="Normal" selected="@(todo.Priority == Priority.Normal)">Normal priority</option>
+                                    <option value="High" selected="@(todo.Priority == Priority.High)">High priority</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input name="dueDate" type="date" class="form-control form-control-sm"
+                                       value="@(todo.DueDate?.ToString("yyyy-MM-dd"))" />
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <input name="notes" class="form-control form-control-sm" value="@todo.Notes" placeholder="Notes" />
+                        </div>
+                    </form>
+
+                    <div class="d-flex align-items-center ms-1">
+                        <button type="submit" form="edit-form-@todo.Id" class="btn btn-sm btn-success me-1 todo-save-btn d-none" id="save-btn-@todo.Id">
+                            Save
+                        </button>
+
+                        <button type="button" class="btn btn-sm btn-outline-primary me-1 todo-edit-btn"
+                                onclick="toggleTodoEdit(@todo.Id)" title="Edit" id="edit-btn-@todo.Id">
+                            Edit
+                        </button>
+
+                        <form method="post" asp-page-handler="Delete" asp-route-id="@todo.Id" id="delete-form-@todo.Id">
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
+                                    onclick="confirmDelete('delete-form-@todo.Id', '@todo.Title')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+                }
+        </ul>
+
+     <!-- Delete Confirmation Modal -->
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete task?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-0">Are you sure you want to delete <strong id="deleteModalTaskName"></strong>? This can't be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <script>
+        function toggleTodoEdit(id) {
+            const display = document.getElementById('display-' + id);
+            const editForm = document.getElementById('edit-form-' + id);
+            const editBtn = document.getElementById('edit-btn-' + id);
+            const saveBtn = document.getElementById('save-btn-' + id);
+
+            const enteringEdit = display.classList.contains('d-none') === false;
+
+            display.classList.toggle('d-none', enteringEdit);
+            editForm.classList.toggle('d-none', !enteringEdit);
+            saveBtn.classList.toggle('d-none', !enteringEdit);
+            editBtn.textContent = enteringEdit ? 'Cancel' : 'Edit';
+        }
+            //Delete JS
+            let pendingDeleteFormId = null;
+
+            function confirmDelete(formId, taskName) {
+                pendingDeleteFormId = formId;
+                document.getElementById('deleteModalTaskName').textContent = taskName;
+
+                const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                modal.show();
+            }
+
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+                if (pendingDeleteFormId) {
+                    document.getElementById(pendingDeleteFormId).submit();
+                }
+            });     
+    </script>
+</div>

@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\App_Data",
+    "\\Models",
+    "\\Pages",
+    "\\Pages\\Shared",
+    "\\Properties",
+    "\\Services",
+    "\\wwwroot",
+    "\\wwwroot\\css"
+  ],
+  "SelectedNode": "\\TodoApp.sln",
+  "PreviewInSolutionExplorer": false
+}
