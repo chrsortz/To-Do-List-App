@@ -1,0 +1,12 @@
+@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="text-danger">Something went wrong.</h1>
+@if (Model.ShowRequestId)
+{
+    <p><strong>Request ID:</strong> @Model.RequestId</p>
+}
+<a href="/" class="btn btn-primary">Back to your to-do list</a>
