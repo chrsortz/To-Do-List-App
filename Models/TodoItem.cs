@@ -26,7 +26,11 @@ public class TodoItem
 
     public DateTime? DueDate { get; set; }
 
+<<<<<<< HEAD
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+=======
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+>>>>>>> teammate/master
 
     public DateTime? CompletedAt { get; set; }
 
