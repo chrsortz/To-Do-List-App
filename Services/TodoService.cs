@@ -31,7 +31,7 @@ public class TodoService : ITodoService
     public async Task<TodoItem> AddAsync(TodoItem item, string userId)
     {
         item.UserId = userId;
-        item.CreatedAt = DateTime.Now;
+        item.CreatedAt = DateTime.UtcNow;
         _context.Todos.Add(item);
         await _context.SaveChangesAsync();
         return item;
@@ -69,7 +69,7 @@ public class TodoService : ITodoService
         if (existing is null) return false;
 
         existing.IsCompleted = !existing.IsCompleted;
-        existing.CompletedAt = existing.IsCompleted ? DateTime.Now : null;
+        existing.CompletedAt = existing.IsCompleted ? DateTime.UtcNow : null;
         await _context.SaveChangesAsync();
         return true;
     }

@@ -26,7 +26,7 @@ public class TodoItem
 
     public DateTime? DueDate { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? CompletedAt { get; set; }
 
